@@ -10,7 +10,7 @@ export class Stack1Stack extends cdk.Stack {
       functionName: 'lambda1',
       runtime: lambda.Runtime.NODEJS_10_X,
       handler: "index.handler",
-      code: lambda.Code.inline('exports.handler = function(event, ctx, cb) { return cb(null, "hello world"); }'),
+      code: lambda.Code.inline(`exports.handler = async (event) => { return { statusCode: 200, body: JSON.stringify('Hello from Lambda!')}};`),
     });
   }
 }
