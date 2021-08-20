@@ -1,7 +1,7 @@
 import { LambdaIntegration, RestApi } from 'monocdk/aws-apigateway';
 import { aws_lambda, Construct, Stack, StackProps } from 'monocdk';
 import { HttpMethod } from 'monocdk/aws-apigatewayv2';
-import { PolicyStatement, Role, ServicePrincipal } from 'monocdk/aws-iam';
+import { PolicyStatement, Role, ServicePrincipal, Effect } from 'monocdk/aws-iam';
 
 export class ApiGatewayStackStack extends Stack {
   protected api: RestApi;
@@ -22,19 +22,30 @@ export class ApiGatewayStackStack extends Stack {
     role.addToPolicy(new PolicyStatement({
       resources: ['*'],
       actions: ['lambda:InvokeFunction'],
+      conditions: {
+        "StringEquals": {
+          "aws:ResourceTag/owner": "team-x"
+        }
+      }
     }));
 
-    const resource = this.api.root.addResource('lambda1');
+    const resource1 = this.api.root.addResource('lambda1');
+    const resource2 = this.api.root.addResource('lambda2');
 
-    const getFunctionArn =
-      `arn:aws:lambda:${ stack.region }:${ stack.account }:function:lambda1`;
+    const getFunction1Arn = `arn:aws:lambda:${stack.region}:${stack.account}:function:lambda1`;
+    const getFunction2Arn = `arn:aws:lambda:${stack.region}:${stack.account}:function:lambda2`;
 
-    const getFunction = aws_lambda.Function.fromFunctionArn(this, `lambda1-id`, getFunctionArn);
+    const getFunction1 = aws_lambda.Function.fromFunctionArn(this, `lambda1-id`, getFunction1Arn);
+    const getFunction2 = aws_lambda.Function.fromFunctionArn(this, `lambda2-id`, getFunction2Arn);
 
-    const lambda1Integration = new LambdaIntegration(getFunction, {
+    const lambda1Integration = new LambdaIntegration(getFunction1, {
+      credentialsRole: role
+    })
+    const lambda2Integration = new LambdaIntegration(getFunction2, {
       credentialsRole: role
     })
 
-    resource.addMethod(HttpMethod.GET, lambda1Integration)
+    resource1.addMethod(HttpMethod.GET, lambda1Integration)
+    resource2.addMethod(HttpMethod.GET, lambda2Integration)
   }
 }
