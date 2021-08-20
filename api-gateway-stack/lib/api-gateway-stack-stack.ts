@@ -10,7 +10,7 @@ export class ApiGatewayStackStack extends cdk.Stack {
 
     // The code that defines your stack goes here
     this.api = new RestApi(this, 'poc-api', {
-      restApiName: 'poc-api'
+      restApiName: 'poc-api',
     })
 
     const resource = this.api.root.addResource('lambda1');
@@ -32,12 +32,12 @@ export class ApiGatewayStackStack extends cdk.Stack {
     resource.addMethod(HttpMethod.GET, lambda1Integration)
 
     // check if we can make this permission less strict - invoke all lambdas instead of 1 - could solve if the problem is permissions?
-    new CfnPermission(this, `${lambda1.id}-api-permission`, {
+/*     new CfnPermission(this, `${lambda1.id}-api-permission`, {
       principal: 'apigateway.amazonaws.com',
       action: 'lambda:InvokeFunction',
       functionName: lambda1Function.functionName,
       sourceArn: this.api.arnForExecuteApi()
-    })
+    }) */
 
   }
 }
