@@ -1,7 +1,7 @@
 import { LambdaIntegration, RestApi } from 'monocdk/aws-apigateway';
 import { aws_lambda, Construct, Stack, StackProps } from 'monocdk';
 import { HttpMethod } from 'monocdk/aws-apigatewayv2';
-import { PolicyStatement, Role, ServicePrincipal, Effect } from 'monocdk/aws-iam';
+import { PolicyStatement, Role, ServicePrincipal } from 'monocdk/aws-iam';
 
 export class ApiGatewayStackStack extends Stack {
   protected api: RestApi;
@@ -15,20 +15,6 @@ export class ApiGatewayStackStack extends Stack {
       restApiName: 'poc-api'
     })
 
-    const role = new Role(this, 'ApiGatewayInvokeLambdaRole', {
-      assumedBy: new ServicePrincipal('apigateway.amazonaws.com'),
-    });
-
-    role.addToPolicy(new PolicyStatement({
-      resources: ['*'],
-      actions: ['lambda:InvokeFunction'],
-      conditions: {
-        "StringEquals": {
-          "aws:ResourceTag/owner": "team-x"
-        }
-      }
-    }));
-
     const resource1 = this.api.root.addResource('lambda1');
     const resource2 = this.api.root.addResource('lambda2');
 
@@ -37,6 +23,15 @@ export class ApiGatewayStackStack extends Stack {
 
     const getFunction1 = aws_lambda.Function.fromFunctionArn(this, `lambda1-id`, getFunction1Arn);
     const getFunction2 = aws_lambda.Function.fromFunctionArn(this, `lambda2-id`, getFunction2Arn);
+
+    const role = new Role(this, 'ApiGatewayInvokeLambdaRole', {
+      assumedBy: new ServicePrincipal('apigateway.amazonaws.com'),
+    });
+
+    role.addToPolicy(new PolicyStatement({
+      resources: [getFunction1Arn],
+      actions: ['lambda:InvokeFunction'],
+    }));
 
     const lambda1Integration = new LambdaIntegration(getFunction1, {
       credentialsRole: role
